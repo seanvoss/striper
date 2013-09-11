@@ -16,7 +16,7 @@ Author URI: http://seanvoss.com/striper
  * License : http://seanvoss.com/woostriper/legal
  */
 
-function init_your_gateway() 
+function striper_init_your_gateway() 
 {
     if (class_exists('WC_Payment_Gateway'))
     {
@@ -24,4 +24,4 @@ function init_your_gateway()
     }
 }
 
-add_action('plugins_loaded', 'init_your_gateway', 0);
+add_action('plugins_loaded', 'striper_init_your_gateway', 0);

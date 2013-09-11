@@ -43,7 +43,7 @@ class Striper extends WC_Payment_Gateway
         add_action('admin_notices'                              , array(&$this, 'perform_ssl_check'    ));
     }
 
-    public function perform_ssl_check()
+    private function perform_ssl_check()
     {
          if (!$this->usesandboxapi && get_option('woocommerce_force_ssl_checkout') == 'no' && $this->enabled == 'yes') :
             echo '<div class="error"><p>'.sprintf(__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'woothemes'), $this->GATEWAY_NAME, admin_url('admin.php?page=settings')).'</p></div>';
@@ -112,6 +112,7 @@ class Striper extends WC_Payment_Gateway
 
     protected function send_to_stripe()
     {
+      global $woocommerce;
 
       // Set your secret key: remember to change this to your live secret key in production
       // See your keys here https://manage.stripe.com/account
@@ -142,6 +143,8 @@ class Striper extends WC_Payment_Gateway
         $body = $e->getJsonBody();
         $err  = $body['error'];
         error_log('Stripe Error:' . $err['message'] . "\n");
+        $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
+        mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
         return false;
       }
     }
@@ -231,24 +234,27 @@ class Striper extends WC_Payment_Gateway
 }
 
 
-function order_status_completed($order_id)
+function striper_order_status_completed($order_id)
 {
-  error_log('in_function');
+  global $woocommerce;
   $authcap = get_post_meta( $order_id, 'auth_capture', true);
   if($authcap)
   {
-  error_log('in_function2');
     Stripe::setApiKey(get_post_meta( $order_id, 'key', true));
     try
     {
       $ch = Stripe_Charge::retrieve(get_post_meta( $order_id, 'transaction_id', true));
       $ch->capture();
-    } catch(Stripe_Error $e) {
+    } 
+    catch(Stripe_Error $e) 
+    {
       // There was an error
       $body = $e->getJsonBody();
       $err  = $body['error'];
       error_log('Stripe Error:' . $err['message'] . "\n");
-      return false;
+      $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
+      mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
+      return null;
     }  
    return true;
   }
@@ -256,12 +262,12 @@ function order_status_completed($order_id)
 
    
 
-function add_creditcard_gateway($methods)
+function striper_add_creditcard_gateway($methods)
 {
     array_push($methods, 'Striper');
     return $methods;
 }
 
-add_filter('woocommerce_payment_gateways',                      'add_creditcard_gateway');
-add_action('woocommerce_order_status_processing_to_completed',  'order_status_completed' );
+add_filter('woocommerce_payment_gateways',                      'striper_add_creditcard_gateway');
+add_action('woocommerce_order_status_processing_to_completed',  'striper_order_status_completed' );
 
