@@ -43,7 +43,7 @@ class Striper extends WC_Payment_Gateway
         add_action('admin_notices'                              , array(&$this, 'perform_ssl_check'    ));
     }
 
-    private function perform_ssl_check()
+    public function perform_ssl_check()
     {
          if (!$this->usesandboxapi && get_option('woocommerce_force_ssl_checkout') == 'no' && $this->enabled == 'yes') :
             echo '<div class="error"><p>'.sprintf(__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'woothemes'), $this->GATEWAY_NAME, admin_url('admin.php?page=settings')).'</p></div>';
