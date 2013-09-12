@@ -57,9 +57,8 @@
 <script type="text/javascript">
 
   jQuery(function($) {
-    Stripe.setPublishableKey('<?= $this->publishable_key ?>');
-    var $form = $('.checkout');
 
+    var $form = $('.checkout');
     var stripeResponseHandler = function(status, response) {
 
     if (response.error) {
@@ -92,6 +91,7 @@
       if( $form.find('[name=stripeToken]').length)
         return true;
 
+      Stripe.setPublishableKey('<?= $this->publishable_key ?>');
       Stripe.createToken($form, stripeResponseHandler)
       // Prevent the form from submitting with the default action
       return false;
