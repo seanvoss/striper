@@ -144,7 +144,6 @@ class Striper extends WC_Payment_Gateway
         $err  = $body['error'];
         error_log('Stripe Error:' . $err['message'] . "\n");
         $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
-        mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
         return false;
       }
     }
@@ -253,7 +252,6 @@ function striper_order_status_completed($order_id)
       $err  = $body['error'];
       error_log('Stripe Error:' . $err['message'] . "\n");
       $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
-      mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
       return null;
     }  
    return true;
