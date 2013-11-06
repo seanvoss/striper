@@ -76,7 +76,7 @@ class Striper extends WC_Payment_Gateway
                 'title'       => __('Title', 'woothemes'),
                 'description' => __('This controls the title which the user sees during checkout.', 'woothemes'),
                 'default'     => __('Credit Card Payment', 'woothemes')
-            ), 
+            ),
             'test_api_key' => array(
                 'type'        => 'text',
                 'title'       => __('Stripe API Test Secret key', 'woothemes'),
@@ -203,7 +203,7 @@ class Striper extends WC_Payment_Gateway
                 $this->GATEWAY_NAME,
                 $this->transactionId
             )
-        );    
+        );
 
         unset($_SESSION['order_awaiting_payment']);
     }
@@ -215,7 +215,7 @@ class Striper extends WC_Payment_Gateway
     {
         return array(
             "amount"      => (float)$this->order->get_total() * 100,
-            "currency"    => strtolower(get_option('woocommerce_currency')),
+            "currency"    => strtolower(get_woocommerce_currency()),
             "token"       => $_POST['stripeToken'],
             "description" => sprintf("Charge for %s", $this->order->billing_email),
             "card"        => array(
@@ -245,8 +245,8 @@ function striper_order_status_completed($order_id)
     {
       $ch = Stripe_Charge::retrieve(get_post_meta( $order_id, 'transaction_id', true));
       $ch->capture();
-    } 
-    catch(Stripe_Error $e) 
+    }
+    catch(Stripe_Error $e)
     {
       // There was an error
       $body = $e->getJsonBody();
@@ -255,12 +255,12 @@ function striper_order_status_completed($order_id)
       $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
       mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
       return null;
-    }  
+    }
    return true;
   }
 }
 
-   
+
 
 function striper_add_creditcard_gateway($methods)
 {
@@ -270,4 +270,3 @@ function striper_add_creditcard_gateway($methods)
 
 add_filter('woocommerce_payment_gateways',                      'striper_add_creditcard_gateway');
 add_action('woocommerce_order_status_processing_to_completed',  'striper_order_status_completed' );
-
