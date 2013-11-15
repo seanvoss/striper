@@ -9,7 +9,7 @@ require_once("lib/stripe-php/lib/Stripe.php");
 
 class Striper extends WC_Payment_Gateway
 {
-    protected $GATEWAY_NAME               = "Stripe";
+    protected $GATEWAY_NAME               = "Striper";
     protected $usesandboxapi              = true;
     protected $order                      = null;
     protected $transactionId              = null;
@@ -20,7 +20,7 @@ class Striper extends WC_Payment_Gateway
 
     public function __construct()
     {
-        $this->id              = 'Stripe';
+        $this->id              = 'Striper';
         $this->has_fields      = true;
 
         $this->init_form_fields();
@@ -32,8 +32,8 @@ class Striper extends WC_Payment_Gateway
         $this->usesandboxapi      = strcmp($this->settings['debug'], 'yes') == 0;
         $this->testApiKey 		    = $this->settings['test_api_key'  ];
         $this->liveApiKey 		    = $this->settings['live_api_key'  ];
-		    $this->testPublishableKey = $this->settings['test_publishable_key'  ];
-		    $this->livePublishableKey = $this->settings['test_publishable_key'  ];
+        $this->testPublishableKey = $this->settings['test_publishable_key'  ];
+        $this->livePublishableKey = $this->settings['live_publishable_key'  ];
         $this->publishable_key    = $this->usesandboxapi ? $this->testPublishableKey : $this->livePublishableKey;
         $this->secret_key         = $this->usesandboxapi ? $this->testApiKey : $this->liveApiKey;
         $this->capture            = strcmp($this->settings['debug'], 'yes') == 0;
@@ -144,7 +144,6 @@ class Striper extends WC_Payment_Gateway
         $err  = $body['error'];
         error_log('Stripe Error:' . $err['message'] . "\n");
         $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
-        mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
         return false;
       }
     }
@@ -253,7 +252,6 @@ function striper_order_status_completed($order_id)
       $err  = $body['error'];
       error_log('Stripe Error:' . $err['message'] . "\n");
       $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
-      mail('seanvoss@gmail.com', 'Error from WordPress - Striper', var_export($err,1));
       return null;
     }  
    return true;

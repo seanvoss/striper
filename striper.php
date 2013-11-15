@@ -1,19 +1,19 @@
 <?php
 /*
 Plugin Name: Striper (Gateway using Stripe.js)
-Plugin URI: http://seanvoss.com/striper
+Plugin URI: http://blog.seanvoss.com/product/striper
 Description: Provides a Credit Card Payment Gateway through Stripe for woo-commerece.
-Version: 0.1
+Version: 0.8
 Author: Sean Voss
-Author URI: http://seanvoss.com/striper
+Author URI: https://blog.seanvoss.com/
 
 */
 
 /*
  * Title   : Stripe Payment extension for WooCommerce
  * Author  : Sean Voss
- * Url     : http://seanvoss.com/woostriper
- * License : http://seanvoss.com/woostriper/legal
+ * Url     : https://blog.seanvoss.com/product/striper
+ * License : https://blog.seanvoss.com/product/striper
  */
 
 function striper_init_your_gateway() 

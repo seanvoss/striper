@@ -1,0 +1,167 @@
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe
+END
+Customer.php
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Customer.php
+END
+Coupon.php
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Coupon.php
+END
+ApiConnectionError.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/ApiConnectionError.php
+END
+SingletonApiResource.php
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/SingletonApiResource.php
+END
+Object.php
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Object.php
+END
+Stripe.php
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Stripe.php
+END
+Card.php
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Card.php
+END
+InvalidRequestError.php
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/InvalidRequestError.php
+END
+InvoiceItem.php
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/InvoiceItem.php
+END
+List.php
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/List.php
+END
+Util.php
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Util.php
+END
+Token.php
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Token.php
+END
+Event.php
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Event.php
+END
+ApiResource.php
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/ApiResource.php
+END
+Recipient.php
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Recipient.php
+END
+CardError.php
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/CardError.php
+END
+ApiRequestor.php
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/ApiRequestor.php
+END
+ApiError.php
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/ApiError.php
+END
+Transfer.php
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Transfer.php
+END
+Balance.php
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Balance.php
+END
+Error.php
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Error.php
+END
+Charge.php
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Charge.php
+END
+AuthenticationError.php
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/AuthenticationError.php
+END
+Plan.php
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Plan.php
+END
+BalanceTransaction.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/BalanceTransaction.php
+END
+Account.php
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Account.php
+END
+Invoice.php
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/!svn/ver/782867/striper/trunk/lib/stripe-php/lib/Stripe/Invoice.php
+END
