@@ -1,5 +1,7 @@
 <?php
-require_once("lib/stripe-php/lib/Stripe.php");
+if (!class_exists('Stripe')) {
+    require_once("lib/stripe-php/lib/Stripe.php");
+}
 /*
  * Title   : Stripe Payment extension for WooCommerce
  * Author  : Sean Voss
@@ -28,19 +30,27 @@ class Striper extends WC_Payment_Gateway
 
         $this->title              = $this->settings['title'];
         $this->description        = '';
-        $this->icon 		          = WP_PLUGIN_URL . "/" . plugin_basename( dirname(__FILE__)) . '/images/credits.png';
+        $this->icon 		      = $this->settings['alternate_imageurl'] ? $this->settings['alternate_imageurl']  : WP_PLUGIN_URL . "/" . plugin_basename( dirname(__FILE__)) . '/images/credits.png';
         $this->usesandboxapi      = strcmp($this->settings['debug'], 'yes') == 0;
-        $this->testApiKey 		    = $this->settings['test_api_key'  ];
-        $this->liveApiKey 		    = $this->settings['live_api_key'  ];
+        $this->testApiKey 		  = $this->settings['test_api_key'  ];
+        $this->liveApiKey 		  = $this->settings['live_api_key'  ];
         $this->testPublishableKey = $this->settings['test_publishable_key'  ];
         $this->livePublishableKey = $this->settings['live_publishable_key'  ];
+        $this->useUniquePaymentProfile = strcmp($this->settings['enable_unique_profile'], 'yes') == 0;
+        $this->useInterval        = strcmp($this->settings['enable_interval'], 'yes') == 0;
         $this->publishable_key    = $this->usesandboxapi ? $this->testPublishableKey : $this->livePublishableKey;
         $this->secret_key         = $this->usesandboxapi ? $this->testApiKey : $this->liveApiKey;
-        $this->capture            = strcmp($this->settings['debug'], 'yes') == 0;
+        $this->capture            = strcmp($this->settings['capture'], 'yes') == 0;
 
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_' . $this->id , array($this, 'process_admin_options'));
         add_action('admin_notices'                              , array(&$this, 'perform_ssl_check'    ));
+        if($this->useInterval)
+        {
+            wp_enqueue_script('the_striper_js', plugins_url('/striper.js',__FILE__) );
+        }
+        wp_enqueue_script('the_stripe_js', 'https://js.stripe.com/v2/' );
+
     }
 
     public function perform_ssl_check()
@@ -97,6 +107,25 @@ class Striper extends WC_Payment_Gateway
                 'title'       => __('Stripe API Live Publishable key', 'woothemes'),
                 'default'     => __('', 'woothemes')
             ),
+            'alternate_imageurl' => array(
+                'type'        => 'text',
+                'title'       => __('Alternate Image to display on checkout, use fullly qualified url, served via https', 'woothemes'),
+                'default'     => __('', 'woothemes')
+            ),
+            'enable_interval' => array(
+                'type'        => 'checkbox',
+                'title'       => __('Enable Interval', 'woothemes'),
+                'label'       => __('Use this only if nothing else is working', 'woothemes'),
+                'default'     => 'no'
+            ),
+            'enable_unique_profile' => array(
+                'type'        => 'checkbox',
+                'title'       => __('Enable Payment Profile Creation', 'woothemes'),
+                'label'       => __('Use this to always create a Payment Profile in Stripe (always creates new profile, regardless of logged in user), and associate the charge with the profile. This allows you more easily identify order, credit, or even make an additional charge (from Stripe admin) at a later date.', 'woothemes'),
+                'default'     => 'no'
+            ),
+
+
        );
     }
 
@@ -123,13 +152,35 @@ class Striper extends WC_Payment_Gateway
 
       // Create the charge on Stripe's servers - this will charge the user's card
       try {
-        $charge = Stripe_Charge::create(array(
-          "amount"      => $data['amount'], // amount in cents, again
-          "currency"    => $data['currency'],
-          "card"        => $data['token'],
-          "description" => $data['card']['name'],
-          "capture"     => !$this->capture,
-        ));
+
+            if($this->useUniquePaymentProfile)
+            {
+              // Create the user as a customer on Stripe servers
+              $customer = Stripe_Customer::create(array(
+                "email" => $data['card']['billing_email'],
+                "description" => $data['card']['name'],
+                "card"  => $data['token']
+              ));
+              // Create the charge on Stripe's servers - this will charge the user's card
+
+            $charge = Stripe_Charge::create(array(
+              "amount"      => $data['amount'], // amount in cents, again
+              "currency"    => $data['currency'],
+              "card"        => $customer->default_card,
+              "description" => $data['card']['name'],
+              "customer"    => $customer->id,
+              "capture"     => !$this->capture,
+            ));
+          } else {
+
+            $charge = Stripe_Charge::create(array(
+              "amount"      => $data['amount'], // amount in cents, again
+              "currency"    => $data['currency'],
+              "card"        => $data['token'],
+              "description" => $data['card']['name'],
+              "capture"     => !$this->capture,
+            ));
+        }
         $this->transactionId = $charge['id'];
 
         //Save data for the "Capture"
@@ -151,22 +202,16 @@ class Striper extends WC_Payment_Gateway
     public function process_payment($order_id)
     {
         global $woocommerce;
-        $this->order        = &new WC_Order($order_id);
+        $this->order        = new WC_Order($order_id);
         if ($this->send_to_stripe())
         {
           $this->completeOrder();
-          return array(
-            'result'   => 'success',
-            'redirect' => add_query_arg(
-              'order',
-              $this->order->id,
-              add_query_arg(
-                  'key',
-                  $this->order->order_key,
-                  get_permalink(get_option('woocommerce_thanks_page_id'))
-              )
-            )
-          );
+
+            $result = array(
+                'result' => 'success',
+                'redirect' => $this->get_return_url($this->order)
+            );
+          return $result;
         }
         else
         {
@@ -232,18 +277,36 @@ class Striper extends WC_Payment_Gateway
 
 }
 
+//add_action('wp_ajax_capture_striper'     ,  'striper_order_status_completed');
 
-function striper_order_status_completed($order_id)
+function striper_order_status_completed($order_id = null)
 {
   global $woocommerce;
+  if (!$order_id)
+      $order_id = $_POST['order_id'];
+
+  $data = get_post_meta( $order_id );
+  $total = $data['_order_total'][0] * 100;
+
+  $params = array();
+  if(isset($_POST['amount']) && $amount = $_POST['amount'])
+  {
+    $params['amount'] = round($amount);
+  }
+
   $authcap = get_post_meta( $order_id, 'auth_capture', true);
   if($authcap)
   {
     Stripe::setApiKey(get_post_meta( $order_id, 'key', true));
     try
     {
-      $ch = Stripe_Charge::retrieve(get_post_meta( $order_id, 'transaction_id', true));
-      $ch->capture();
+      $tid = get_post_meta( $order_id, 'transaction_id', true);
+      $ch = Stripe_Charge::retrieve($tid);
+      if($total < $ch->amount)
+      {
+          $params['amount'] = $total;
+      }
+      $ch->capture($params);
     }
     catch(Stripe_Error $e)
     {
@@ -268,3 +331,4 @@ function striper_add_creditcard_gateway($methods)
 
 add_filter('woocommerce_payment_gateways',                      'striper_add_creditcard_gateway');
 add_action('woocommerce_order_status_processing_to_completed',  'striper_order_status_completed' );
+
