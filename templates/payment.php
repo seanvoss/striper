@@ -11,12 +11,12 @@
 <div class="clear"></div>
 <span class='payment-errors required'></span>
 <p class="form-row">
-  <label>Card Number <span class="required">*</span></label>
+  <label><?php _e('Card Number','striper'); ?> <span class="required">*</span></label>
   <input class="input-text" type="text" size="19" maxlength="19" data-stripe="number" style="border-radius:6px;width:400px;"/>
 </p>
 <div class="clear"></div>
 <p class="form-row form-row-first">
-  <label>Expiration Month <span class="required">*</span></label>
+  <label><?php _e('Expiration Month','striper'); ?> <span class="required">*</span></label>
   <select data-stripe="exp-month">
       <option value=1>01</option>
       <option value=2>02</option>
@@ -33,7 +33,7 @@
   </select>
 </p>
 <p class="form-row form-row-last">
-  <label>Expiration Year  <span class="required">*</span></label>
+  <label><?php _e('Expiration Year','striper'); ?> <span class="required">*</span></label>
   <select data-stripe="exp-year">
 <?php
     $today = (int)date('Y', time());
@@ -49,7 +49,7 @@
 </p>
 <div class="clear"></div>
 <p class="form-row form-row-first">
-    <label>Card Verification Number <span class="required">*</span></label>
+    <label><?php _e('Card Verification Number','striper'); ?> <span class="required">*</span></label>
     <input class="input-text" type="text" maxlength="4" data-stripe="cvc" value=""  style="border-radius:6px"/>
 </p>
 <div class="clear"></div>
