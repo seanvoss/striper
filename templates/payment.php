@@ -80,7 +80,41 @@
         }
         if(el.id == 'billing_first_name' || el.id == 'billing_last_name')
         {
-            card_name += $(el).val() + ' ';
+            // If the billing first and last name fields were pre-populated (if the user was logged in)
+            // the fields will have values
+            var billingFirstName = $('#billing_first_name').val();
+            var billingLastName = $('#billing_last_name').val();
+
+            // Set the card name from the pre-populated fields
+            card_name = $('#billing_first_name').val() + ' ' + $('#billing_last_name').val();
+
+
+            // If the first name is changed
+            $('#billing_first_name').blur(function () {
+              
+              // update the first name
+              billingFirstName = $(this).val();
+              
+              // update the card name with the new first name
+              card_name = billingFirstName + " " + billingLastName;
+              
+              // Update the hidden Stripe card name input with the new card name
+              $('#stripeCardName').attr('value', card_name);
+            });
+
+
+            // If the last name is changed
+            $('#billing_last_name').blur(function () {
+              
+              // update the last name
+              billingLastName = $('#billing_last_name').val();
+              
+              // update the card name with the new last name
+              card_name = billingFirstName + " " + billingLastName;
+
+              // Update the hidden Stripe card name input with the new card name
+              $('#stripeCardName').attr('value', card_name);
+            });
         }
         
         
