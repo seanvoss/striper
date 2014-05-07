@@ -7,7 +7,7 @@
  */
 ?>
 
-<div id="stripe_pub_key" class="hidden" style="display:none" data-publishablekey="<?=$this->publishable_key ?>"> </div>
+<div id="stripe_pub_key" class="hidden" style="display:none" data-publishablekey="<?php echo $this->publishable_key; ?>"> </div>
 <div class="clear"></div>
 <span class='payment-errors required'></span>
 <p class="form-row">
