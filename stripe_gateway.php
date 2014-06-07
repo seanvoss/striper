@@ -44,13 +44,45 @@ class Striper extends WC_Payment_Gateway
 
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_' . $this->id , array($this, 'process_admin_options'));
-        add_action('admin_notices'                              , array(&$this, 'perform_ssl_check'    ));
+        add_action('admin_notices'                              , array($this, 'perform_ssl_check'    ));
+
         if($this->useInterval)
         {
             wp_enqueue_script('the_striper_js', plugins_url('/striper.js',__FILE__) );
         }
         wp_enqueue_script('the_stripe_js', 'https://js.stripe.com/v2/' );
 
+    }
+
+    public function get_user_from_stripe_id($id)
+    {
+        global $wpdb;
+
+        return $wpdb->get_row(
+            $wpdb->prepare("select * from $wpdb->usermeta where meta_key = 'stripe_id' and meta_value= '%s'", $id
+            )
+        );
+    }
+
+    public function build_subscriptions_page()
+    {
+        Stripe::setApiKey($this->secret_key);
+
+        $this->customers = Stripe_Customer::all(array('limit'=>100));
+        include_once('templates/subscriptions.php');
+
+    }
+    public function cancel_sub($id, $customer)
+    {
+        Stripe::setApiKey($this->secret_key);
+        $cu = Stripe_Customer::retrieve($customer);
+        $cu->subscriptions->retrieve($id)->cancel();
+    }
+
+
+    public function swap_cc_callback()
+    {
+        include_once('templates/payment.php');
     }
 
     public function perform_ssl_check()
@@ -136,12 +168,27 @@ class Striper extends WC_Payment_Gateway
 
     public function payment_fields()
     {
+        Stripe::setApiKey($this->secret_key);
+        $customer_id = get_user_meta( get_current_user_id(), "stripe_id",true);
+        error_log($customer_id);
+        $card = null;
+        if($customer_id)
+        {    
+            $customer = Stripe_Customer::retrieve($customer_id);
+            foreach($customer->cards->data as $cards){
+                if($cards->id == $customer->default_card)
+                {
+                    $card = $cards;
+                }
+            }
+        }
         include_once('templates/payment.php');
     }
 
     protected function send_to_stripe()
     {
       global $woocommerce;
+
 
       // Set your secret key: remember to change this to your live secret key in production
       // See your keys here https://manage.stripe.com/account
@@ -155,32 +202,60 @@ class Striper extends WC_Payment_Gateway
 
             if($this->useUniquePaymentProfile)
             {
-              // Create the user as a customer on Stripe servers
-              $customer = Stripe_Customer::create(array(
-                "email" => $data['card']['billing_email'],
-                "description" => $data['card']['name'],
-                "card"  => $data['token']
-              ));
+              if (!$customer_id = get_user_meta( get_current_user_id(), "stripe_id",true))
+              {
+                // Create the user as a customer on Stripe servers
+                $customer = Stripe_Customer::create(array(
+                  "email" => $data['card']['email'],
+                  "description" => $data['card']['name'],
+                  "card"  => $data['token']
+                ));
+
+                update_user_meta( get_current_user_id(), "stripe_id", $customer->id);
+              }
+              else
+              {
+                $customer = Stripe_Customer::retrieve($customer_id);
+              }
               // Create the charge on Stripe's servers - this will charge the user's card
+              $plan = null;
+              foreach(array_values($woocommerce->cart->get_cart()) as $product)
+              {
+                  $item = $product['data'];
+                  if($item->__get('subscription_interval'))
+                  {
+                      $plan = $item->id;
+                  }
+              }
+                  
+              if ($plan)
+              {
+                  error_log($this->order->post_ID);
+                  $customer->subscriptions->create(array("plan" => $plan));
 
-            $charge = Stripe_Charge::create(array(
-              "amount"      => $data['amount'], // amount in cents, again
-              "currency"    => $data['currency'],
-              "card"        => $customer->default_card,
-              "description" => $data['card']['name'],
-              "customer"    => $customer->id,
-              "capture"     => !$this->capture,
-            ));
-          } else {
+              }
+              else
+              {
+                  var_dump($customer->id);
+                  $charge = Stripe_Charge::create(array(
+                    "amount"      => $data['amount'], // amount in cents, again
+                    "currency"    => $data['currency'],
+                    "card"        => $customer->default_card,
+                    "description" => $data['card']['name'],
+                    "customer"    => $customer->id,
+                    "capture"     => !$this->capture,
+                  ));
+              }
+            } else {
 
-            $charge = Stripe_Charge::create(array(
-              "amount"      => $data['amount'], // amount in cents, again
-              "currency"    => $data['currency'],
-              "card"        => $data['token'],
-              "description" => $data['card']['name'],
-              "capture"     => !$this->capture,
-            ));
-        }
+                $charge = Stripe_Charge::create(array(
+                  "amount"      => $data['amount'], // amount in cents, again
+                  "currency"    => $data['currency'],
+                  "card"        => $data['token'],
+                  "description" => $data['card']['name'],
+                  "capture"     => !$this->capture,
+                ));
+            }
         $this->transactionId = $charge['id'];
 
         //Save data for the "Capture"
@@ -203,6 +278,8 @@ class Striper extends WC_Payment_Gateway
     {
         global $woocommerce;
         $this->order        = new WC_Order($order_id);
+        error_log(var_export($this->order->product-type,1));
+        error_log('asfsffs');
         if ($this->send_to_stripe())
         {
           $this->completeOrder();
@@ -224,7 +301,7 @@ class Striper extends WC_Payment_Gateway
     {
         $this->order->add_order_note(
             sprintf(
-                __("%s Credit Card Payment Failed with message: '%s'",'striper'),
+                "%s Credit Card Payment Failed with message: '%s'",
                 $this->GATEWAY_NAME,
                 $this->transactionErrorMessage
             )
@@ -243,7 +320,7 @@ class Striper extends WC_Payment_Gateway
 
         $this->order->add_order_note(
             sprintf(
-                __("%s payment completed with Transaction Id of '%s'",'striper'),
+                "%s payment completed with Transaction Id of '%s'",
                 $this->GATEWAY_NAME,
                 $this->transactionId
             )
@@ -264,6 +341,7 @@ class Striper extends WC_Payment_Gateway
             "description" => sprintf("Charge for %s", $this->order->billing_email),
             "card"        => array(
                 "name"            => sprintf("%s %s", $this->order->billing_first_name, $this->order->billing_last_name),
+                "email"           => $this->order->billing_email,
                 "address_line1"   => $this->order->billing_address_1,
                 "address_line2"   => $this->order->billing_address_2,
                 "address_zip"     => $this->order->billing_postcode,
@@ -273,6 +351,57 @@ class Striper extends WC_Payment_Gateway
         );
     }
     return false;
+  }
+
+  public function set_subscription()
+  {
+    $secret_key         = $this->usesandboxapi ? $this->testApiKey : $this->liveApiKey;
+     Stripe::setApiKey($secret_key);
+    $postID = $_POST['post_ID'];
+    if ($_POST['product-type'] === 'subscription')
+    {
+
+        try
+        {
+            $plan = Stripe_Plan::retrieve($postID);
+            $plan->delete();
+        } 
+        catch(Stripe_Error $e)
+        {
+          // There was an error
+          $body = $e->getJsonBody();
+          $err  = $body['error'];
+          error_log('Stripe Error:' . $err['message'] . "\n");
+        }
+
+        try
+        {
+            Stripe_Plan::create(array(
+              "amount"            => $_POST['_regular_price'] * 100,
+              "interval"          => $_POST["_subscription_interval"],
+              "interval_count"    => $_POST["_subscription_interval_count"],
+              "name"              => $_POST["post_name"],
+              "currency"          => strtolower(get_woocommerce_currency()),
+              "id"                => $_POST["post_ID"],
+              "trial_period_days" => $_POST['_subscription_trial']
+            ));
+            update_post_meta($postID,  '_subscription_interval', $_POST['_subscription_interval']);
+            update_post_meta($postID,  '_subscription_interval_count' , $_POST['_subscription_interval_count']);
+            update_post_meta($postID, '_subscription_trial', $_POST['_subscription_trial']);
+        }
+        catch(Stripe_Error $e)
+        {
+          // There was an error
+          $body = $e->getJsonBody();
+          $err  = $body['error'];
+          error_log('Stripe Error:' . $err['message'] . "\n");
+        }
+
+
+
+    }
+
+
   }
 
 }
@@ -331,4 +460,101 @@ function striper_add_creditcard_gateway($methods)
 
 add_filter('woocommerce_payment_gateways',                      'striper_add_creditcard_gateway');
 add_action('woocommerce_order_status_processing_to_completed',  'striper_order_status_completed' );
+add_action('woocommerce_product_options_general_product_data',  'subscription_box' );
+add_action('woocommerce_single_product_summary',  'subscription_template', 9 );
+
+function subscription_template()
+{
+    global $post;
+    if( get_post_meta($post->ID, '_subscription_interval', true))
+        include_once('templates/subscription_product.php');
+}
+
+
+add_action('save_post',  'set_subscription');
+function set_subscription()
+{
+    $striper = new Striper();
+    $striper->set_subscription();
+}
+
+
+add_filter('product_type_selector', 'add_subscription_product_type');
+
+function subscription_box($stuff)
+{
+    global $post;
+    $thepostid = $post->ID;
+
+            echo '<div class="options_group pricing show_if_subscription show_if_external">'; 
+ 
+                // Price 
+                woocommerce_wp_text_input( array( 'id' => '_regular_price', 'class' => 'wc_input_price short', 'label' => __( 'Regular Price', 'woocommerce' ) . ' ('.get_woocommerce_currency_symbol().')', 'type' => 'number', 'custom_attributes' => array( 
+                    'step'  => 'any', 
+                    'min'   => '0' 
+                ) ) ); 
+ 
+                // Special Price 
+                woocommerce_wp_text_input( array( 'id' => '_sale_price', 'class' => 'wc_input_price short', 'label' => __( 'Sale Price', 'woocommerce' ) . ' ('.get_woocommerce_currency_symbol().')', 'description' => '<a href="#" class="sale_schedule">' . __( 'Schedule', 'woocommerce' ) . '</a>', 'type' => 'number', 'custom_attributes' => array( 
+                    'step'  => 'any', 
+                    'min'   => '0' 
+                ) ) ); 
+ 
+                // Special Price date range 
+                $sale_price_dates_from  = ( $date = get_post_meta( $thepostid, '_sale_price_dates_from', true ) ) ? date_i18n( 'Y-m-d', $date ) : ''; 
+                $sale_price_dates_to    = ( $date = get_post_meta( $thepostid, '_sale_price_dates_to', true ) ) ? date_i18n( 'Y-m-d', $date ) : ''; 
+ 
+                echo '  <p class="form-field sale_price_dates_fields"> 
+                            <label for="_sale_price_dates_from">' . __( 'Sale Price Dates', 'woocommerce' ) . '</label> 
+                            <input type="text" class="short" name="_sale_price_dates_from" id="_sale_price_dates_from" value="' . $sale_price_dates_from . '" placeholder="' . _x( 'From&hellip;', 'placeholder', 'woocommerce' ) . ' YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" /> 
+                            <input type="text" class="short" name="_sale_price_dates_to" id="_sale_price_dates_to" value="' . $sale_price_dates_to . '" placeholder="' . _x( 'To&hellip;', 'placeholder', 'woocommerce' ) . '  YYYY-MM-DD" maxlength="10" pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" /> 
+                            <a href="#" class="cancel_sale_schedule">'. __( 'Cancel', 'woocommerce' ) .'</a> 
+                        </p>'; 
+ 
+
+       woocommerce_wp_radio(array(
+           'id' => '_subscription_interval', 
+           'class' => 'wc_interval short', 
+           'label' => __( 'Subscription Interval', 'woocommerce' ), 
+           'value' => get_post_meta($thepostid, '_subscription_interval', true) ? get_post_meta($thepostid, '_subscription_interval', true) : 'month',
+           'options' => array(
+                'week'  => 'week',
+                'month' => 'month',
+                'year'  => 'year',
+            )
+          )
+       );
+
+
+       woocommerce_wp_text_input(array(
+        'id' => '_subscription_interval_count',
+        'class' => 'wc_interval short', 
+        'label' => __( 'Interval Count', 'woocommerce' ), 
+         'value' => get_post_meta($thepostid, '_subscription_interval_count', true) ? get_post_meta($thepostid, '_subscription_interval_count', true) : 1,
+       ));
+
+       woocommerce_wp_text_input(array(
+         'id' => '_subscription_trial',
+         'class' => 'wc_interval short', 
+         'label' => __( 'Trial Period (Days)', 'woocommerce' ), 
+         'value' => get_post_meta($thepostid, '_subscription_trial', true) ? get_post_meta($thepostid, '_subscription_trial', true) : 1,
+       ));
+ 
+            echo '</div>';
+
+}
+require_once('WC_Product_Type_Subscription.php');
+function add_subscription_product_type( $types ){
+   $types[ 'subscription' ] = __( 'Subscription Product', 'woocommerce' );
+   return $types;
+}
+
+
+/*
+                // Price
+                woocommerce_wp_text_input( array( 'id' => '_regular_price', 'class' => 'wc_input_price short', 'label' => __( 'Regular Price', 'woocommerce' ) . ' ('.get_woocommerce_currency_symbol().')', 'type' => 'number', 'custom_attributes' => array(
+                    'step'  => 'any',
+                    'min'   => '0'
+                ) ) );
+*/
 
