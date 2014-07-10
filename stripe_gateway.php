@@ -136,7 +136,14 @@ class Striper extends WC_Payment_Gateway
 
     public function payment_fields()
     {
-        include_once('templates/payment.php');
+        if (file_exists(get_stylesheet_directory() . '/striper/payment.php'))
+        {
+          include_once(get_stylesheet_directory() . '/striper/payment.php');
+        }
+        else
+        {
+          include_once('templates/payment.php');
+        }        
     }
 
     protected function send_to_stripe()
