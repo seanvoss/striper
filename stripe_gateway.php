@@ -11,6 +11,11 @@ if (!class_exists('Stripe')) {
 
 class Striper extends WC_Payment_Gateway
 {
+	private $version = '0.28';
+	private $path;
+	private $url;
+	
+	
     protected $GATEWAY_NAME               = "Striper";
     protected $usesandboxapi              = true;
     protected $order                      = null;
@@ -22,6 +27,8 @@ class Striper extends WC_Payment_Gateway
 
     public function __construct()
     {
+		$this->setup_paths_and_urls();
+		
         $this->id              = 'Striper';
         $this->has_fields      = true;
 
@@ -136,7 +143,15 @@ class Striper extends WC_Payment_Gateway
 
     public function payment_fields()
     {
-        include_once('templates/payment.php');
+		$this->get_template('payment', array('publishable_key' => $this->publishable_key));
+		
+		wp_enqueue_script(
+			'striper', 
+			$this->url['assets'] . 'js/striper.js', 
+			array('jquery'), 
+			$this->version, 
+			true
+		);
     }
 
     protected function send_to_stripe()
@@ -274,6 +289,24 @@ class Striper extends WC_Payment_Gateway
     }
     return false;
   }
+  
+  private function setup_paths_and_urls() {
+		$this->path['plugin_file'] = __FILE__;
+		$this->path['plugin_dir'] = untrailingslashit(plugin_dir_path(__FILE__));
+		//$this->path['includes'] = $this->path['plugin_dir'] . 'includes/';
+		
+		$this->url['plugin_dir'] = plugin_dir_url(__FILE__);
+		$this->url['assets'] = $this->url['plugin_dir'] . 'assets/';
+	}
+	
+	private function get_template($template_name, $args = array()) {
+		wc_get_template(
+			"$template_name.php",
+			$args,
+			'striper', 
+			$this->path['plugin_dir'] . 'templates/'
+		);
+	}
 
 }
 
