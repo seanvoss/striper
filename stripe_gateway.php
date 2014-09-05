@@ -224,7 +224,7 @@ class Striper extends WC_Payment_Gateway
     {
         $this->order->add_order_note(
             sprintf(
-                __("%s Credit Card Payment Failed with message: '%s'",'striper'),
+                "%s Credit Card Payment Failed with message: '%s'",
                 $this->GATEWAY_NAME,
                 $this->transactionErrorMessage
             )
@@ -243,7 +243,7 @@ class Striper extends WC_Payment_Gateway
 
         $this->order->add_order_note(
             sprintf(
-                __("%s payment completed with Transaction Id of '%s'",'striper'),
+                "%s payment completed with Transaction Id of '%s'",
                 $this->GATEWAY_NAME,
                 $this->transactionId
             )

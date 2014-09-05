@@ -7,16 +7,16 @@
  */
 ?>
 
-<div id="stripe_pub_key" class="hidden" style="display:none" data-publishablekey="<?php echo $this->publishable_key; ?>"> </div>
+<div id="stripe_pub_key" class="hidden" style="display:none" data-publishablekey="<?=$this->publishable_key ?>"> </div>
 <div class="clear"></div>
 <span class='payment-errors required'></span>
-<p class="form-row striper-card-number">
-  <label><?php _e('Card Number','striper'); ?> <span class="required">*</span></label>
+<p class="form-row">
+  <label>Card Number <span class="required">*</span></label>
   <input class="input-text" type="text" size="19" maxlength="19" data-stripe="number" style="border-radius:6px;width:400px;"/>
 </p>
 <div class="clear"></div>
-<p class="form-row form-row-first striper-expiration-month">
-  <label><?php _e('Expiration Month','striper'); ?> <span class="required">*</span></label>
+<p class="form-row form-row-first">
+  <label>Expiration Month <span class="required">*</span></label>
   <select data-stripe="exp-month">
       <option value=1>01</option>
       <option value=2>02</option>
@@ -32,8 +32,8 @@
       <option value=12>12</option>
   </select>
 </p>
-<p class="form-row form-row-last striper-expiration-year">
-  <label><?php _e('Expiration Year','striper'); ?> <span class="required">*</span></label>
+<p class="form-row form-row-last">
+  <label>Expiration Year  <span class="required">*</span></label>
   <select data-stripe="exp-year">
 <?php
     $today = (int)date('Y', time());
@@ -48,8 +48,8 @@
     </select>
 </p>
 <div class="clear"></div>
-<p class="form-row form-row-first striper-verification-number">
-    <label><?php _e('Card Verification Number','striper'); ?> <span class="required">*</span></label>
+<p class="form-row form-row-first">
+    <label>Card Verification Number <span class="required">*</span></label>
     <input class="input-text" type="text" maxlength="4" data-stripe="cvc" value=""  style="border-radius:6px"/>
 </p>
 <div class="clear"></div>
@@ -76,46 +76,14 @@
         if (mapped)
         {
             $(el).attr('data-stripe',mapped);
-
+            
         }
         if(el.id == 'billing_first_name' || el.id == 'billing_last_name')
         {
-            // If the billing first and last name fields were pre-populated (if the user was logged in)
-            // the fields will have values
-            var billingFirstName = $('#billing_first_name').val();
-            var billingLastName = $('#billing_last_name').val();
-
-            // Set the card name from the pre-populated fields
-            card_name = $('#billing_first_name').val() + ' ' + $('#billing_last_name').val();
-
-
-            // If the first name is changed
-            $('#billing_first_name').blur(function () {
-              
-              // update the first name
-              billingFirstName = $(this).val();
-              
-              // update the card name with the new first name
-              card_name = billingFirstName + " " + billingLastName;
-              
-              // Update the hidden Stripe card name input with the new card name
-              $('#stripeCardName').attr('value', card_name);
-            });
-
-
-            // If the last name is changed
-            $('#billing_last_name').blur(function () {
-              
-              // update the last name
-              billingLastName = $('#billing_last_name').val();
-              
-              // update the card name with the new last name
-              card_name = billingFirstName + " " + billingLastName;
-
-              // Update the hidden Stripe card name input with the new card name
-              $('#stripeCardName').attr('value', card_name);
-            });
+            card_name += $(el).val() + ' ';
         }
+        
+        
     });
     if (!$('#stripeCardName').length)
     {
@@ -142,6 +110,11 @@
   };
 
     $('body').on('click', '#place_order,form#order_review input:submit', function(){
+      if(jQuery('.payment_methods input:checked').val() !== 'Striper')
+      {
+        return true;
+      }
+
       // Make sure there's not an old token on the form
       Stripe.setPublishableKey($('#stripe_pub_key').data('publishablekey'));
       Stripe.createToken($form, stripeResponseHandler);
@@ -150,6 +123,10 @@
 
 
     $('body').on('click', '#place_order,form.checkout input:submit', function(){
+      if(jQuery('.payment_methods input:checked').val() !== 'Striper')
+      {
+        return true;
+      }
       // Make sure there's not an old token on the form
       $('form.checkout').find('[name=stripeToken]').remove()
     })
