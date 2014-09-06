@@ -19,5 +19,5 @@ Fork It and Contribute!
 
 Click "Download Zip" to get a Wordpress Compatible Plugin.
 
-Tested on Wordpress 3.5.2  WooCommerce 2.0.13
+Tested on Wordpress 4.0  WooCommerce 2.2.0
 
