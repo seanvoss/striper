@@ -33,6 +33,7 @@ None at this time
 
 = 0.30 =
 * Bug fix: Force SSL warning bad link, gh-17
+* Enhancement: prepare plugin messages for I18N
 = 0.29 =
 * Fixing bug where Striper is not the payment type selected.
 = 0.28 =

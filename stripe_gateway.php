@@ -66,7 +66,7 @@ class Striper extends WC_Payment_Gateway
             echo 
 				'<div class="error"><p>' . 
 				sprintf(
-					__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'woothemes'), 
+					__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'striper'), 
 					$this->GATEWAY_NAME, 
 					admin_url('admin.php?page=wc-settings&tab=checkout')
 				) . 
@@ -79,67 +79,65 @@ class Striper extends WC_Payment_Gateway
         $this->form_fields = array(
             'enabled' => array(
                 'type'        => 'checkbox',
-                'title'       => __('Enable/Disable', 'woothemes'),
-                'label'       => __('Enable Credit Card Payment', 'woothemes'),
+                'title'       => __('Enable/Disable', 'striper'),
+                'label'       => __('Enable Credit Card Payment', 'striper'),
                 'default'     => 'yes'
             ),
             'capture' => array(
                 'type'        => 'checkbox',
-                'title'       => __('Auth & Capture', 'woothemes'),
-                'label'       => __('Enable Authorization & Capture', 'woothemes'),
+                'title'       => __('Auth & Capture', 'striper'),
+                'label'       => __('Enable Authorization & Capture', 'striper'),
                 'default'     => 'no'
             ),
             'debug' => array(
                 'type'        => 'checkbox',
-                'title'       => __('Testing', 'woothemes'),
-                'label'       => __('Turn on testing', 'woothemes'),
+                'title'       => __('Testing', 'striper'),
+                'label'       => __('Turn on testing', 'striper'),
                 'default'     => 'no'
             ),
             'title' => array(
                 'type'        => 'text',
-                'title'       => __('Title', 'woothemes'),
-                'description' => __('This controls the title which the user sees during checkout.', 'woothemes'),
-                'default'     => __('Credit Card Payment', 'woothemes')
+                'title'       => __('Title', 'striper'),
+                'description' => __('This controls the title which the user sees during checkout.', 'striper'),
+                'default'     => __('Credit Card Payment', 'striper')
             ),
             'test_api_key' => array(
                 'type'        => 'text',
-                'title'       => __('Stripe API Test Secret key', 'woothemes'),
-                'default'     => __('', 'woothemes')
+                'title'       => __('Stripe API Test Secret key', 'striper'),
+                'default'     => ''
             ),
             'test_publishable_key' => array(
                 'type'        => 'text',
-                'title'       => __('Stripe API Test Publishable key', 'woothemes'),
-                'default'     => __('', 'woothemes')
+                'title'       => __('Stripe API Test Publishable key', 'striper'),
+                'default'     => ''
             ),
             'live_api_key' => array(
                 'type'        => 'text',
-                'title'       => __('Stripe API Live Secret key', 'woothemes'),
-                'default'     => __('', 'woothemes')
+                'title'       => __('Stripe API Live Secret key', 'striper'),
+                'default'     => ''
             ),
             'live_publishable_key' => array(
                 'type'        => 'text',
-                'title'       => __('Stripe API Live Publishable key', 'woothemes'),
-                'default'     => __('', 'woothemes')
+                'title'       => __('Stripe API Live Publishable key', 'striper'),
+                'default'     => ''
             ),
             'alternate_imageurl' => array(
                 'type'        => 'text',
-                'title'       => __('Alternate Image to display on checkout, use fullly qualified url, served via https', 'woothemes'),
-                'default'     => __('', 'woothemes')
+                'title'       => __('Alternate Image to display on checkout, use fullly qualified url, served via https', 'striper'),
+                'default'     => ''
             ),
             'enable_interval' => array(
                 'type'        => 'checkbox',
-                'title'       => __('Enable Interval', 'woothemes'),
-                'label'       => __('Use this only if nothing else is working', 'woothemes'),
+                'title'       => __('Enable Interval', 'striper'),
+                'label'       => __('Use this only if nothing else is working', 'striper'),
                 'default'     => 'no'
             ),
             'enable_unique_profile' => array(
                 'type'        => 'checkbox',
-                'title'       => __('Enable Payment Profile Creation', 'woothemes'),
-                'label'       => __('Use this to always create a Payment Profile in Stripe (always creates new profile, regardless of logged in user), and associate the charge with the profile. This allows you more easily identify order, credit, or even make an additional charge (from Stripe admin) at a later date.', 'woothemes'),
+                'title'       => __('Enable Payment Profile Creation', 'striper'),
+                'label'       => __('Use this to always create a Payment Profile in Stripe (always creates new profile, regardless of logged in user), and associate the charge with the profile. This allows you more easily identify order, credit, or even make an additional charge (from Stripe admin) at a later date.', 'striper'),
                 'default'     => 'no'
             ),
-
-
        );
     }
 
@@ -216,7 +214,7 @@ class Striper extends WC_Payment_Gateway
         $body = $e->getJsonBody();
         $err  = $body['error'];
         error_log('Stripe Error:' . $err['message'] . "\n");
-        $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
+        $woocommerce->add_error(__('Payment error:', 'striper') . $err['message']);
         return false;
       }
     }
@@ -238,7 +236,7 @@ class Striper extends WC_Payment_Gateway
         else
         {
           $this->markAsFailedPayment();
-          $woocommerce->add_error(__('Transaction Error: Could not complete your payment'), 'woothemes');
+          $woocommerce->add_error(__('Transaction Error: Could not complete your payment'), 'striper');
         }
     }
 
@@ -354,7 +352,7 @@ function striper_order_status_completed($order_id = null)
       $body = $e->getJsonBody();
       $err  = $body['error'];
       error_log('Stripe Error:' . $err['message'] . "\n");
-      $woocommerce->add_error(__('Payment error:', 'woothemes') . $err['message']);
+      $woocommerce->add_error(__('Payment error:', 'striper') . $err['message']);
       return null;
     }
    return true;
