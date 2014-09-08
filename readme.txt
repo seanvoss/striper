@@ -31,6 +31,8 @@ None at this time
 
 == Changelog ==
 
+= 0.30 =
+* Bug fix: Force SSL warning bad link, gh-17
 = 0.29 =
 * Fixing bug where Striper is not the payment type selected.
 = 0.28 =
