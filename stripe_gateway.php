@@ -268,8 +268,6 @@ class Striper extends WC_Payment_Gateway
                 $this->transactionId
             )
         );
-
-        unset($_SESSION['order_awaiting_payment']);
     }
 
 
