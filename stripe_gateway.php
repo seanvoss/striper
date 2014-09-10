@@ -11,12 +11,11 @@ if (!class_exists('Stripe')) {
 
 class Striper extends WC_Payment_Gateway
 {
-	private $version = '0.28';
+	private $version = '0.30';
 	private $path;
 	private $url;
 	
 	
-    protected $GATEWAY_NAME               = "Striper";
     protected $usesandboxapi              = true;
     protected $order                      = null;
     protected $transactionId              = null;
@@ -29,25 +28,31 @@ class Striper extends WC_Payment_Gateway
     {
 		$this->setup_paths_and_urls();
 		
-        $this->id              = 'Striper';
+        $this->id = 'striper';
+		$this->method_title = __('Striper', 'striper');
+		$this->method_description = __('Process credit cards via Stripe', 'striper');
         $this->has_fields      = true;
 
         $this->init_form_fields();
         $this->init_settings();
 
-        $this->title              = $this->settings['title'];
-        $this->description        = '';
-        $this->icon 		      = $this->settings['alternate_imageurl'] ? $this->settings['alternate_imageurl']  : WP_PLUGIN_URL . "/" . plugin_basename( dirname(__FILE__)) . '/images/credits.png';
-        $this->usesandboxapi      = strcmp($this->settings['debug'], 'yes') == 0;
-        $this->testApiKey 		  = $this->settings['test_api_key'  ];
-        $this->liveApiKey 		  = $this->settings['live_api_key'  ];
-        $this->testPublishableKey = $this->settings['test_publishable_key'  ];
-        $this->livePublishableKey = $this->settings['live_publishable_key'  ];
-        $this->useUniquePaymentProfile = strcmp($this->settings['enable_unique_profile'], 'yes') == 0;
-        $this->useInterval        = strcmp($this->settings['enable_interval'], 'yes') == 0;
-        $this->publishable_key    = $this->usesandboxapi ? $this->testPublishableKey : $this->livePublishableKey;
+        $this->title = $this->get_option('title');
+		
+		$alt_image = $this->get_option('alternate_imageurl');
+        $this->icon = empty($alt_image) ? $this->url['assets'] . 'images/credits.png' : $alt_image;
+        
+		$this->usesandboxapi      = $this->get_option('sandbox') == 'yes';
+		
+        $this->testApiKey 		  = $this->get_option('test_api_key');
+        $this->liveApiKey 		  = $this->get_option('live_api_key');
+        $this->testPublishableKey = $this->get_option('test_publishable_key');
+        $this->livePublishableKey = get_option('live_publishable_key');
+		$this->publishable_key    = $this->usesandboxapi ? $this->testPublishableKey : $this->livePublishableKey;
         $this->secret_key         = $this->usesandboxapi ? $this->testApiKey : $this->liveApiKey;
-        $this->capture            = strcmp($this->settings['capture'], 'yes') == 0;
+        
+		$this->useUniquePaymentProfile = $this->get_option('enable_unique_profile') == 'yes';
+        $this->useInterval        = $this->get_option('enable_interval') == 'yes';
+        $this->capture            = $this->get_option('capture') == 'yes';
 
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_' . $this->id , array($this, 'process_admin_options'));
@@ -67,7 +72,7 @@ class Striper extends WC_Payment_Gateway
 				'<div class="error"><p>' . 
 				sprintf(
 					__('%s sandbox testing is disabled and can performe live transactions but the <a href="%s">force SSL option</a> is disabled; your checkout is not secure! Please enable SSL and ensure your server has a valid SSL certificate.', 'striper'), 
-					$this->GATEWAY_NAME, 
+					$this->method_title, 
 					admin_url('admin.php?page=wc-settings&tab=checkout')
 				) . 
 				'</p></div>'
@@ -78,72 +83,68 @@ class Striper extends WC_Payment_Gateway
     {
         $this->form_fields = array(
             'enabled' => array(
-                'type'        => 'checkbox',
                 'title'       => __('Enable/Disable', 'striper'),
+                'type'        => 'checkbox',
                 'label'       => __('Enable Credit Card Payment', 'striper'),
                 'default'     => 'yes'
             ),
-            'capture' => array(
-                'type'        => 'checkbox',
-                'title'       => __('Auth & Capture', 'striper'),
-                'label'       => __('Enable Authorization & Capture', 'striper'),
-                'default'     => 'no'
-            ),
-            'debug' => array(
-                'type'        => 'checkbox',
-                'title'       => __('Testing', 'striper'),
-                'label'       => __('Turn on testing', 'striper'),
-                'default'     => 'no'
-            ),
-            'title' => array(
-                'type'        => 'text',
+			'title' => array(
                 'title'       => __('Title', 'striper'),
-                'description' => __('This controls the title which the user sees during checkout.', 'striper'),
-                'default'     => __('Credit Card Payment', 'striper')
-            ),
-            'test_api_key' => array(
                 'type'        => 'text',
+                'description' => __('This controls the title which the user sees during checkout.', 'striper'),
+                'default'     => __('Credit Card Payment with Stripe', 'striper')
+            ),
+			'test_api_key' => array(
                 'title'       => __('Stripe API Test Secret key', 'striper'),
+                'type'        => 'text',
                 'default'     => ''
             ),
             'test_publishable_key' => array(
-                'type'        => 'text',
                 'title'       => __('Stripe API Test Publishable key', 'striper'),
+                'type'        => 'text',
                 'default'     => ''
             ),
             'live_api_key' => array(
-                'type'        => 'text',
                 'title'       => __('Stripe API Live Secret key', 'striper'),
+                'type'        => 'text',
                 'default'     => ''
             ),
             'live_publishable_key' => array(
-                'type'        => 'text',
                 'title'       => __('Stripe API Live Publishable key', 'striper'),
+                'type'        => 'text',
                 'default'     => ''
             ),
-            'alternate_imageurl' => array(
-                'type'        => 'text',
-                'title'       => __('Alternate Image to display on checkout, use fullly qualified url, served via https', 'striper'),
-                'default'     => ''
+            'capture' => array(
+                'title'       => __('Auth & Capture', 'striper'),
+                'type'        => 'checkbox',
+                'label'       => __('Enable Authorization & Capture', 'striper'),
+                'default'     => 'no'
             ),
             'enable_interval' => array(
-                'type'        => 'checkbox',
                 'title'       => __('Enable Interval', 'striper'),
+                'type'        => 'checkbox',
                 'label'       => __('Use this only if nothing else is working', 'striper'),
                 'default'     => 'no'
             ),
             'enable_unique_profile' => array(
-                'type'        => 'checkbox',
                 'title'       => __('Enable Payment Profile Creation', 'striper'),
+                'type'        => 'checkbox',
                 'label'       => __('Use this to always create a Payment Profile in Stripe (always creates new profile, regardless of logged in user), and associate the charge with the profile. This allows you more easily identify order, credit, or even make an additional charge (from Stripe admin) at a later date.', 'striper'),
                 'default'     => 'no'
             ),
+			'alternate_imageurl' => array(
+                'title'       => __('Alternate Image to display on checkout', 'striper'),
+                'type'        => 'text',
+				'description' => __('Use fullly qualified url, served via https', 'striper'),
+                'default'     => ''
+            ),
+			'sandbox' => array(
+                'title'       => __('Testing', 'striper'),
+                'type'        => 'checkbox',
+                'label'       => __('Turn on testing with Stripe sandbox', 'striper'),
+                'default'     => 'no'
+            ),
        );
-    }
-
-    public function admin_options()
-    {
-        include_once('templates/admin.php');
     }
 
     public function payment_fields()
@@ -168,7 +169,7 @@ class Striper extends WC_Payment_Gateway
       Stripe::setApiKey($this->secret_key);
 
       // Get the credit card details submitted by the form
-      $data = $this->getRequestData();
+      $data = $this->get_request_data();
 
       // Create the charge on Stripe's servers - this will charge the user's card
       try {
@@ -225,7 +226,7 @@ class Striper extends WC_Payment_Gateway
         $this->order        = new WC_Order($order_id);
         if ($this->send_to_stripe())
         {
-          $this->completeOrder();
+          $this->complete_order();
 
             $result = array(
                 'result' => 'success',
@@ -235,23 +236,23 @@ class Striper extends WC_Payment_Gateway
         }
         else
         {
-          $this->markAsFailedPayment();
+          $this->mark_as_failed_payment();
           $woocommerce->add_error(__('Transaction Error: Could not complete your payment'), 'striper');
         }
     }
 
-    protected function markAsFailedPayment()
+    protected function mark_as_failed_payment()
     {
         $this->order->add_order_note(
             sprintf(
                 "%s Credit Card Payment Failed with message: '%s'",
-                $this->GATEWAY_NAME,
+                $this->method_title,
                 $this->transactionErrorMessage
             )
         );
     }
 
-    protected function completeOrder()
+    protected function complete_order()
     {
         global $woocommerce;
 
@@ -264,14 +265,14 @@ class Striper extends WC_Payment_Gateway
         $this->order->add_order_note(
             sprintf(
                 "%s payment completed with Transaction Id of '%s'",
-                $this->GATEWAY_NAME,
+                $this->method_title,
                 $this->transactionId
             )
         );
     }
 
 
-  protected function getRequestData()
+  protected function get_request_data()
   {
     if ($this->order AND $this->order != null)
     {
@@ -357,8 +358,6 @@ function striper_order_status_completed($order_id = null)
   }
 }
 
-
-
 function striper_add_creditcard_gateway($methods)
 {
     array_push($methods, 'Striper');
@@ -367,4 +366,3 @@ function striper_add_creditcard_gateway($methods)
 
 add_filter('woocommerce_payment_gateways',                      'striper_add_creditcard_gateway');
 add_action('woocommerce_order_status_processing_to_completed',  'striper_order_status_completed' );
-

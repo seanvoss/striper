@@ -33,8 +33,10 @@ None at this time
 
 = 0.30 =
 * Bug fix: Force SSL warning bad link, gh-17
-* Enhancement: prepare plugin messages for I18N
 * Bug fix: no need of explicit unset of 'order_awaiting_payment' session variable in newer WC versions, gh-21
+* Enhancement: prepare plugin messages for I18N
+* Refactoring: wc gateway admin settings API
+* Code cleanup
 = 0.29 =
 * Fixing bug where Striper is not the payment type selected.
 = 0.28 =
