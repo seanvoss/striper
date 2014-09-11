@@ -14,8 +14,7 @@ class Striper extends WC_Payment_Gateway
 	private $version = '0.30';
 	private $path;
 	private $url;
-	
-	
+	private $logger = null;
     protected $usesandboxapi              = true;
     protected $order                      = null;
     protected $transactionId              = null;
@@ -40,6 +39,9 @@ class Striper extends WC_Payment_Gateway
 		
 		$alt_image = $this->get_option('alternate_imageurl');
         $this->icon = empty($alt_image) ? $this->url['assets'] . 'images/credits.png' : $alt_image;
+		
+		if ($this->get_option('logging') == 'yes')
+			$logger = new WC_Logger();
         
 		$this->usesandboxapi      = $this->get_option('sandbox') == 'yes';
 		
@@ -81,7 +83,7 @@ class Striper extends WC_Payment_Gateway
 
     public function init_form_fields()
     {
-        $this->form_fields = array(
+		$this->form_fields = array(
             'enabled' => array(
                 'title'       => __('Enable/Disable', 'striper'),
                 'type'        => 'checkbox',
@@ -144,6 +146,12 @@ class Striper extends WC_Payment_Gateway
                 'label'       => __('Turn on testing with Stripe sandbox', 'striper'),
                 'default'     => 'no'
             ),
+			'logging' => array(
+                'title'       => __('Logging', 'striper'),
+                'type'        => 'checkbox',
+                'label'       => __('Turn on logging to troubleshot problems', 'striper'),
+                'default'     => 'no'
+            )
        );
     }
 
@@ -211,12 +219,16 @@ class Striper extends WC_Payment_Gateway
         return true;
 
       } catch(Stripe_Error $e) {
-        // The card has been declined, or other error
+		// The card has been declined, or other error
         $body = $e->getJsonBody();
         $err  = $body['error'];
-        error_log('Stripe Error:' . $err['message'] . "\n");
-        wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
-        return false;
+		
+		if ($this->logger)
+			$this->logger->add('striper', 'Stripe Error:' . $err['message']);
+
+		wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
+        
+		return false;
       }
     }
 
@@ -350,9 +362,13 @@ function striper_order_status_completed($order_id = null)
       // There was an error
       $body = $e->getJsonBody();
       $err  = $body['error'];
-      error_log('Stripe Error:' . $err['message'] . "\n");
-      wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
-      return null;
+	  
+	  if ($this->logger)
+			$this->logger->add('striper', 'Stripe Error:' . $err['message']);
+      
+	  wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
+      
+	  return null;
     }
    return true;
   }
