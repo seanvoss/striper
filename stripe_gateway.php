@@ -215,7 +215,7 @@ class Striper extends WC_Payment_Gateway
         $body = $e->getJsonBody();
         $err  = $body['error'];
         error_log('Stripe Error:' . $err['message'] . "\n");
-        $woocommerce->add_error(__('Payment error:', 'striper') . $err['message']);
+        wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
         return false;
       }
     }
@@ -237,7 +237,7 @@ class Striper extends WC_Payment_Gateway
         else
         {
           $this->mark_as_failed_payment();
-          $woocommerce->add_error(__('Transaction Error: Could not complete your payment'), 'striper');
+          wc_add_notice(__('Transaction Error: Could not complete your payment', 'striper'), 'error');
         }
     }
 
@@ -351,7 +351,7 @@ function striper_order_status_completed($order_id = null)
       $body = $e->getJsonBody();
       $err  = $body['error'];
       error_log('Stripe Error:' . $err['message'] . "\n");
-      $woocommerce->add_error(__('Payment error:', 'striper') . $err['message']);
+      wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
       return null;
     }
    return true;
