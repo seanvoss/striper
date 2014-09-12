@@ -1,13 +1,9 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 if (!class_exists('Stripe')) {
     require_once("lib/stripe-php/lib/Stripe.php");
 }
-/*
- * Title   : Stripe Payment extension for WooCommerce
- * Author  : Sean Voss
- * Url     : http://seanvoss.com/woostriper
- * License : http://seanvoss.com/woostriper/legal
- */
 
 class Striper extends WC_Payment_Gateway
 {

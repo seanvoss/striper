@@ -1,11 +1,4 @@
-<?php
-/*
- * Title   : Stripe Payment extension for WooCommerce
- * Author  : Sean Voss
- * Url     : http://seanvoss.com/woostriper
- * License : http://seanvoss.com/woostriper/legal
- */
-?>
+<?php if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 
 <div id="stripe_pub_key" class="hidden" style="display:none" data-publishablekey="<?php echo esc_attr($publishable_key;) ?>"> </div>
 <div class="clear"></div>

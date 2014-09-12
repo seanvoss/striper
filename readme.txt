@@ -44,6 +44,7 @@ None at this time
 * Refactoring: wc gateway admin settings API
 * Use the logging system provided by WC
 * Use wc_add_notice() instead of deprecated $woocommerce->add_error()
+* Security checks to prevent direct access to plugin files
 * Code cleanup
 = 0.29 =
 * Fixing bug where Striper is not the payment type selected.
