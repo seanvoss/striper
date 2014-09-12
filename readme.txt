@@ -13,6 +13,11 @@ Striper for WooCommerce allows your users to pay via Stripe.
 
 The Stripe plugin extends WooCommerce allowing you to take payments directly on your store via Stripe’s API. Stripe is available in the United States, Canada, the UK, Australia, Belgium, France, Germany, Ireland, The Netherlands and more
 
+WooCommerce version requisites:
+
+* Requires at least: 2.1
+* Tested up to: 2.2.2
+
 == Installation ==
 
 1. Install the WooCommerce Stripe Plugin
@@ -35,6 +40,7 @@ None at this time
 * Bug fix: Force SSL warning bad link, gh-17
 * Bug fix: no need of explicit unset of 'order_awaiting_payment' session variable in newer WC versions, gh-21
 * Enhancement: prepare plugin messages for I18N
+* Enhancement: checks on WC version
 * Refactoring: wc gateway admin settings API
 * Use the logging system provided by WC
 * Use wc_add_notice() instead of deprecated $woocommerce->add_error()

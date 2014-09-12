@@ -6,22 +6,13 @@ Description: Provides a Credit Card Payment Gateway through Stripe for woo-comme
 Version: 0.29
 Author: Sean Voss
 Author URI: https://blog.seanvoss.com/
-
+License : https://blog.seanvoss.com/product/striper
 */
-
-/*
- * Title   : Stripe Payment extension for WooCommerce
- * Author  : Sean Voss
- * Url     : https://blog.seanvoss.com/product/striper
- * License : https://blog.seanvoss.com/product/striper
- */
 
 function striper_init_your_gateway() 
 {
-    if (class_exists('WC_Payment_Gateway'))
-    {
+    if (class_exists('WC_Payment_Gateway') && version_compare(WC_VERSION, '2.1', '>='))
         include_once('stripe_gateway.php');
-    }
 }
 
 add_action('plugins_loaded', 'striper_init_your_gateway', 0);
