@@ -29,7 +29,7 @@ class Striper extends WC_Payment_Gateway
 		
         $this->id = 'striper';
 		$this->method_title = __('Striper', 'striper');
-		$this->method_description = __('Process credit cards via Stripe', 'striper');
+		$this->method_description = __('Process credit cards with Stripe', 'striper');
         $this->has_fields      = true;
 
         $this->init_form_fields();
@@ -94,7 +94,7 @@ class Striper extends WC_Payment_Gateway
                 'title'       => __('Title', 'striper'),
                 'type'        => 'text',
                 'description' => __('This controls the title which the user sees during checkout.', 'striper'),
-                'default'     => __('Credit Card Payment with Stripe', 'striper')
+                'default'     => __('Credit Card  with Stripe', 'striper')
             ),
 			'test_api_key' => array(
                 'title'       => __('Stripe API Test Secret key', 'striper'),
