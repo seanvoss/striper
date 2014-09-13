@@ -23,6 +23,8 @@ class Striper extends WC_Payment_Gateway
     {
 		$this->setup_paths_and_urls();
 		
+		$this->supports[] = 'default_credit_card_form';
+		
         $this->id = 'striper';
 		$this->method_title = __('Striper', 'striper');
 		$this->method_description = __('Process credit cards with Stripe', 'striper');
@@ -59,9 +61,56 @@ class Striper extends WC_Payment_Gateway
         {
             wp_enqueue_script('the_striper_js', plugins_url('/striper.js',__FILE__) );
         }
-        wp_enqueue_script('the_stripe_js', 'https://js.stripe.com/v2/' );
-
+		
+		add_action('woocommerce_credit_card_form_args', array($this, 'wc_cc_default_args'), 10, 2); 
+		add_action('woocommerce_credit_card_form_start', array($this, 'error_box'));
+		add_action('woocommerce_credit_card_form_end', array($this, 'inject_js'));
     }
+	
+	public function wc_cc_default_args($args, $gateway_id) {
+		if ($gateway_id === $this->id)
+			$args['fields_have_names'] = false;
+			
+		return $args;
+	}
+	
+	public function error_box($gateway_id) {
+		if ($gateway_id !== $this->id)
+			return;
+		?>
+			<ol id="striper-errorbox"></ol>
+		<?php
+	}
+	
+	public function inject_js($gateway_id) {
+		if ($gateway_id !== $this->id)
+			return;
+			
+		wp_register_script(
+			'stripe_js', 
+			'https://js.stripe.com/v2/', 
+			array(), 
+			$this->version, 
+			true
+		);
+		
+		wp_enqueue_script(
+			'striper', 
+			$this->url['assets'] . 'js/striper.js', 
+			array('jquery', 'stripe_js'), 
+			$this->version, 
+			true
+		);
+		
+		wp_localize_script(
+			'striper',
+			'striperCfg',
+			array(
+				'publishableKey' => $this->publishable_key,
+				'gatewayId' => $this->id
+			)
+		);
+	}
 
     public function perform_ssl_check()
     {
@@ -149,19 +198,6 @@ class Striper extends WC_Payment_Gateway
                 'default'     => 'no'
             )
        );
-    }
-
-    public function payment_fields()
-    {
-		$this->get_template('payment', array('publishable_key' => $this->publishable_key));
-		
-		wp_enqueue_script(
-			'striper', 
-			$this->url['assets'] . 'js/striper.js', 
-			array('jquery'), 
-			$this->version, 
-			true
-		);
     }
 
     protected function send_to_stripe()
