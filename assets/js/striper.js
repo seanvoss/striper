@@ -1,11 +1,13 @@
 jQuery(function($) {
 		 
 	Stripe.setPublishableKey(striperCfg.publishableKey);
-		 
+		
+	errorBox = $('<ol id="striper-errorbox"></ol>').appendTo('body');
+	//errorBox = $('#striper-errorbox');
     var 
 		checkoutForm = $('form.checkout'),
-		stripeTokenHiddenInput = $('<input type="hidden" name="stripeToken">'),
-		errorBox = $('#striper-errorbox')
+		stripeTokenHiddenInput = $('<input type="hidden" name="stripeToken">')//,
+		//errorBox = $('#striper-errorbox')
 	;
 
     // Bind to the checkout_place_order event to add the token
@@ -20,7 +22,7 @@ jQuery(function($) {
 		}
 			
 		// CC fields validation with Js
-		errorBox.empty();
+		//errorBox.empty();
 		var errors = [];
 		errorBox.append('<li>foo</li>');
 		console.log(errorBox);
@@ -56,7 +58,7 @@ jQuery(function($) {
 		if (cvc.length > 0)
 			tokenCreationArgs.cvc = cvc;
 		
-		Stripe.createToken(tokenCreationArgs, stripeResponseHandler);
+		Stripe.card.createToken(tokenCreationArgs, stripeResponseHandler);
 		
 		return false;
     });

@@ -51,19 +51,14 @@ class Striper extends WC_Payment_Gateway
         $this->secret_key         = $this->usesandboxapi ? $this->testApiKey : $this->liveApiKey;
         
 		$this->useUniquePaymentProfile = $this->get_option('enable_unique_profile') == 'yes';
-        $this->useInterval        = $this->get_option('enable_interval') == 'yes';
         $this->capture            = $this->get_option('capture') == 'yes';
 
         // tell WooCommerce to save options
         add_action('woocommerce_update_options_payment_gateways_' . $this->id , array($this, 'process_admin_options'));
         add_action('admin_notices', array($this, 'perform_ssl_check'));
-        if($this->useInterval)
-        {
-            wp_enqueue_script('the_striper_js', plugins_url('/striper.js',__FILE__) );
-        }
 		
 		add_action('woocommerce_credit_card_form_args', array($this, 'wc_cc_default_args'), 10, 2); 
-		add_action('woocommerce_credit_card_form_start', array($this, 'error_box'));
+		//add_action('woocommerce_credit_card_form_start', array($this, 'error_box'));
 		add_action('woocommerce_credit_card_form_end', array($this, 'inject_js'));
     }
 	
@@ -167,12 +162,6 @@ class Striper extends WC_Payment_Gateway
                 'label'       => __('Enable Authorization & Capture', 'striper'),
                 'default'     => 'no'
             ),
-            'enable_interval' => array(
-                'title'       => __('Enable Interval', 'striper'),
-                'type'        => 'checkbox',
-                'label'       => __('Use this only if nothing else is working', 'striper'),
-                'default'     => 'no'
-            ),
             'enable_unique_profile' => array(
                 'title'       => __('Enable Payment Profile Creation', 'striper'),
                 'type'        => 'checkbox',
@@ -200,23 +189,16 @@ class Striper extends WC_Payment_Gateway
        );
     }
 
-    protected function send_to_stripe()
-    {
-      global $woocommerce;
+	protected function send_to_stripe() {
+		Stripe::setApiKey($this->secret_key);
 
-      // Set your secret key: remember to change this to your live secret key in production
-      // See your keys here https://manage.stripe.com/account
-      Stripe::setApiKey($this->secret_key);
+		// Get the credit card details submitted by the form
+		$data = $this->get_request_data();
 
-      // Get the credit card details submitted by the form
-      $data = $this->get_request_data();
-
-      // Create the charge on Stripe's servers - this will charge the user's card
-      try {
-
-            if($this->useUniquePaymentProfile)
-            {
-              // Create the user as a customer on Stripe servers
+		// Create the charge on Stripe's servers - this will charge the user's card
+		try {
+			if($this->useUniquePaymentProfile) {
+				// Create the user as a customer on Stripe servers
               $customer = Stripe_Customer::create(array(
                 "email" => $data['card']['billing_email'],
                 "description" => $data['card']['name'],
@@ -225,43 +207,44 @@ class Striper extends WC_Payment_Gateway
               // Create the charge on Stripe's servers - this will charge the user's card
 
             $charge = Stripe_Charge::create(array(
-              "amount"      => $data['amount'], // amount in cents, again
+              "amount"      => $data['amount'], // amount in cents
               "currency"    => $data['currency'],
               "card"        => $customer->default_card,
               "description" => $data['card']['name'],
               "customer"    => $customer->id,
               "capture"     => !$this->capture,
             ));
-          } else {
-
-            $charge = Stripe_Charge::create(array(
-              "amount"      => $data['amount'], // amount in cents, again
-              "currency"    => $data['currency'],
-              "card"        => $data['token'],
-              "description" => $data['card']['name'],
-              "capture"     => !$this->capture,
-            ));
-        }
-        $this->transactionId = $charge['id'];
-
-        //Save data for the "Capture"
-        update_post_meta( $this->order->id, 'transaction_id', $this->transactionId);
-        update_post_meta( $this->order->id, 'key', $this->secret_key);
-        update_post_meta( $this->order->id, 'auth_capture', $this->capture);
-        return true;
-
-      } catch(Stripe_Error $e) {
-		// The card has been declined, or other error
-        $body = $e->getJsonBody();
-        $err  = $body['error'];
-		
-		if ($this->logger)
-			$this->logger->add('striper', 'Stripe Error:' . $err['message']);
-
-		wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
+			} else {
+				$charge = Stripe_Charge::create(array(
+					'amount' => $data['amount'], // amount in cents
+					'currency' => $data['currency'],
+					'card' => $data['token'],
+					'description' => $data['card']['name'],
+					'capture' => !$this->capture
+				));
+			}
         
-		return false;
-      }
+			$this->transactionId = $charge['id'];
+
+			//Save data for the "Capture"
+			update_post_meta( $this->order->id, 'transaction_id', $this->transactionId);
+			update_post_meta( $this->order->id, 'key', $this->secret_key);
+			update_post_meta( $this->order->id, 'auth_capture', $this->capture);
+			
+			return true;
+
+		} catch(Stripe_Error $e) {
+			// The card has been declined, or other error
+			$body = $e->getJsonBody();
+			$err  = $body['error'];
+		
+			if ($this->logger)
+				$this->logger->add('striper', 'Stripe Error:' . $err['message']);
+
+			wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
+        
+			return false;
+		}
     }
 
     public function process_payment($order_id)

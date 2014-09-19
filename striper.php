@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 function striper_init_your_gateway() 
 {
     if (class_exists('WC_Payment_Gateway') && version_compare(WC_VERSION, '2.1', '>='))
-        include_once('stripe_gateway.php');
+        include_once('stripe-gateway.php');
 }
 
 add_action('plugins_loaded', 'striper_init_your_gateway', 0);
