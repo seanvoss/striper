@@ -306,7 +306,7 @@ class Striper extends WC_Payment_Gateway
         return array(
             "amount"      => (float)$this->order->get_total() * 100,
             "currency"    => strtolower(get_woocommerce_currency()),
-            "token"       => $_POST['stripeToken'],
+            "token"       => isset($_POST['stripeToken']) ? $_POST['stripeToken'] : '',
             "description" => sprintf("Charge for %s", $this->order->billing_email),
             "card"        => array(
                 "name"            => sprintf("%s %s", $this->order->billing_first_name, $this->order->billing_last_name),
