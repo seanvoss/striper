@@ -33,11 +33,12 @@ jQuery(function($) {
 	
 	function getStripeToken() {
 		errorBox.hide();
-		//checkoutForm.block({message: null,overlayCSS: {background: "#fff url(" + woocommerce_params.ajax_loader_url + ") no-repeat center",backgroundSize: "16px 16px",opacity: .6}});
+		
+		blockUI();
 
 		// Pass if we have a token
 		if ( checkoutForm.find('[name=stripeToken]').length) {
-			//checkoutForm.unblock();
+			unblockUI();
 			return true;
 		}
 			
@@ -58,8 +59,8 @@ jQuery(function($) {
 				errorBox.push('Invalid credit card CVC');
 		
 		if (errorBox.errors()) {
-			//checkoutForm.unblock();
 			errorBox.show();
+			unblockUI();
 			return false;
 		}
 		
@@ -86,8 +87,23 @@ jQuery(function($) {
 			;
 		} else {
 			errorBox.push(response.error.message).show();
-			//checkoutForm.unblock();
+			unblockUI();
 		}
+	}
+	
+	function blockUI() {
+		checkoutForm.block({
+			message: null,
+			overlayCSS: {
+				background: '#fff url(' + woocommerce_params.ajax_loader_url + ') no-repeat center',
+				backgroundSize: '16px 16px',
+				opacity: .6
+			}
+		});
+	}
+	
+	function unblockUI() {
+		checkoutForm.unblock();
 	}
 
 });
