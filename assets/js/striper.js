@@ -2,17 +2,37 @@ jQuery(function($) {
 		 
 	Stripe.setPublishableKey(striperCfg.publishableKey);
 		
-	errorBox = $('<ol id="striper-errorbox"></ol>').appendTo('body');
-	//errorBox = $('#striper-errorbox');
     var 
 		checkoutForm = $('form.checkout'),
 		stripeTokenHiddenInput = $('<input type="hidden" name="stripeToken">')//,
-		//errorBox = $('#striper-errorbox')
+		errorBox = (function() {
+			var 
+				box = $('<ol id="striper-errorbox"></ol>')
+			;
+			return {
+				hide: function() {
+					box.empty().detach();
+				},
+				push: function(errMsg) {
+					box.append('<li>' + errMsg + '</li>');
+					return this;
+				},
+				show: function() {
+					box.prependTo('#striper-cc-form');
+				},
+				errors: function() {
+					return box.children().length > 0;
+				}
+			};
+		})()
 	;
 
-    // Bind to the checkout_place_order event to add the token
-	$('form.checkout').on('checkout_place_order_' + striperCfg.gatewayId, function(e) {
-      
+	$('form.checkout').on('checkout_place_order_' + striperCfg.gatewayId, getStripeToken);
+	$('body').on('click', '#place_order, form.checkout input:submit', function() { /* Make sure there's not an old token on the form*/ stripeTokenHiddenInput.detach(); });
+	/* $('body').on('click', '#place_order,form#order_review input:submit', function(){ // Make sure there's not an old token on the form createStripeToken(); return false; }); */
+	
+	function getStripeToken() {
+		errorBox.hide();
 		//checkoutForm.block({message: null,overlayCSS: {background: "#fff url(" + woocommerce_params.ajax_loader_url + ") no-repeat center",backgroundSize: "16px 16px",opacity: .6}});
 
 		// Pass if we have a token
@@ -21,39 +41,32 @@ jQuery(function($) {
 			return true;
 		}
 			
-		// CC fields validation with Js
-		//errorBox.empty();
-		var errors = [];
-		errorBox.append('<li>foo</li>');
-		console.log(errorBox);
-		
 		var cardNumber = $('#' + striperCfg.gatewayId + '-card-number').val();
 		if (!$.payment.validateCardNumber(cardNumber))
-			errors.push('Invalid credit card number');
+			errorBox.push('Invalid credit card number');
 		
 		var 
-			expiry = $('#' + striperCfg.gatewayId + '-card-expiry').val(),
-			expiryParts = $.payment.cardExpiryVal(expiry)
+			expiryString = $('#' + striperCfg.gatewayId + '-card-expiry').val(),
+			expiryDate = $.payment.cardExpiryVal(expiryString)
 		;
-		if (!$.payment.validateCardExpiry(expiryParts.month, expiryParts.year))
-			errors.push('Ivalidy credit card expiry date');
+		if (!$.payment.validateCardExpiry(expiryDate.month, expiryDate.year))
+			errorBox.push('Ivalidy credit card expiry date');
 			
 		var cvc = $('#' + striperCfg.gatewayId + '-card-cvc').val();
 		if (cvc.length > 0)
 			if (!$.payment.validateCardCVC(cvc))
-				errors.push('Invalid credit card CVC');
+				errorBox.push('Invalid credit card CVC');
 		
-		if (errors.length > 0) {
+		if (errorBox.errors()) {
 			//checkoutForm.unblock();
-			errorBox.append('<li>errors</li>');
-			console.log('js errors');
-			//return false;
+			errorBox.show();
+			return false;
 		}
 		
 		var tokenCreationArgs = {
 			number: cardNumber, 
-			exp_month: expiry.month,
-			exp_year: expiry.year
+			exp_month: expiryDate.month,
+			exp_year: expiryDate.year
 		};
 		if (cvc.length > 0)
 			tokenCreationArgs.cvc = cvc;
@@ -61,7 +74,7 @@ jQuery(function($) {
 		Stripe.card.createToken(tokenCreationArgs, stripeResponseHandler);
 		
 		return false;
-    });
+    }
 	
 	function stripeResponseHandler(status, response) {
 		console.log(status, response);
@@ -72,21 +85,10 @@ jQuery(function($) {
 				.submit()
 			;
 		} else {
-			errorBox.append('<li>' + response.error.message + '</li>');
+			errorBox.push(response.error.message).show();
 			//checkoutForm.unblock();
 		}
 	}
-	
-	/* $('body').on('click', '#place_order,form#order_review input:submit', function(){
-		// Make sure there's not an old token on the form
-		createStripeToken();
-		return false;
-    }); */
 
-	$('body').on('click', '#place_order, form.checkout input:submit', function() {
-		// Make sure there's not an old token on the form
-		stripeTokenHiddenInput.detach();
-    })
-	
- });
+});
  
