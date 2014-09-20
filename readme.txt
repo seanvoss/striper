@@ -18,6 +18,10 @@ WooCommerce version requisites:
 * Requires at least: 2.1
 * Tested up to: 2.2.2
 
+* Customization of the CC form *
+
+Using the wc filter 'woocommerce_credit_card_form_fields'. must preserve fields id(later we could allow their customization via filters)
+
 == Installation ==
 
 1. Install the WooCommerce Stripe Plugin
@@ -37,6 +41,7 @@ None at this time
 == Changelog ==
 
 = 0.30 =
+* Feature: use the default WC CC form with its customization filters
 * Bug fix: Force SSL warning bad link, gh-17
 * Bug fix: no need of explicit unset of 'order_awaiting_payment' session variable in newer WC versions, gh-21
 * Enhancement: prepare plugin messages for I18N
