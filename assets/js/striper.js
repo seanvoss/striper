@@ -51,7 +51,7 @@ jQuery(function($) {
 			expiryDate = $.payment.cardExpiryVal(expiryString)
 		;
 		if (!$.payment.validateCardExpiry(expiryDate.month, expiryDate.year))
-			errorBox.push('Ivalidy credit card expiry date');
+			errorBox.push('Invalid credit card expiry date');
 			
 		var cvc = $('#' + striperCfg.gatewayId + '-card-cvc').val();
 		if (cvc.length > 0)
