@@ -46,7 +46,7 @@ class Striper extends WC_Payment_Gateway
         $this->testApiKey 		  = $this->get_option('test_api_key');
         $this->liveApiKey 		  = $this->get_option('live_api_key');
         $this->testPublishableKey = $this->get_option('test_publishable_key');
-        $this->livePublishableKey = get_option('live_publishable_key');
+        $this->livePublishableKey = $this->get_option('live_publishable_key');
 		$this->publishable_key    = $this->usesandboxapi ? $this->testPublishableKey : $this->livePublishableKey;
         $this->secret_key         = $this->usesandboxapi ? $this->testApiKey : $this->liveApiKey;
         
