@@ -239,10 +239,10 @@ class Striper extends WC_Payment_Gateway
 			$err  = $body['error'];
 		
 			if ($this->logger)
-				$this->logger->add('striper', 'Stripe Error:' . $err['message']);
+				$this->logger->add('striper', 'Stripe Error: ' . $err['message']);
 
-			wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
-        
+			wc_add_notice(__('Payment error: ', 'striper') . $err['message'], 'error');
+        		$this->transactionErrorMessage = $err['message'];
 			return false;
 		}
     }
@@ -379,10 +379,10 @@ function striper_order_status_completed($order_id = null)
       $err  = $body['error'];
 	  
 	  if ($this->logger)
-			$this->logger->add('striper', 'Stripe Error:' . $err['message']);
+			$this->logger->add('striper', 'Stripe Error: ' . $err['message']);
       
-	  wc_add_notice(__('Payment error:', 'striper') . $err['message'], 'error');
-      
+	  wc_add_notice(__('Payment error: ', 'striper') . $err['message'], 'error');
+          $this->transactionErrorMessage = $err['message'];
 	  return null;
     }
    return true;
