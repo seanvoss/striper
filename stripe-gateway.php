@@ -17,7 +17,7 @@ class Striper extends WC_Payment_Gateway
     protected $transactionErrorMessage    = null;
     protected $stripeTestApiKey           = '';
     protected $stripeLiveApiKey           = '';
-    protected $publishable_key            = '';
+    public $publishable_key            = '';
 
     public function __construct()
     {
